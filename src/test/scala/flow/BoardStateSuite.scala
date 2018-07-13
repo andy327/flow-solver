@@ -300,4 +300,14 @@ class BoardStateSuite extends FunSuite {
     new Board7 { assert(!doesLastMoveBorderWall) }
   }
 
+  test("lastMoveDistanceToWall") {
+    new Board1 { assert(lastMoveDistanceToWall == 0) }
+    new Board2 { assert(lastMoveDistanceToWall == 0) }
+    new Board3 { assert(lastMoveDistanceToWall == 0) }
+    new Board4 { assert(lastMoveDistanceToWall == 0) }
+    new Board5 { assert(lastMoveDistanceToWall == 1) }
+    new Board6 { assert(lastMoveDistanceToWall == 0) }
+    new Board7 { assert(lastMoveDistanceToWall == 1) }
+  }
+
 }

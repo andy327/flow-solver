@@ -305,6 +305,15 @@ trait BoardState extends BoardDef { self =>
     case None => false
   }
 
+  /**
+    * Returns the minimum distance to one of the four walls. We can ignore the case where there are no moves because we
+    * will never need to consider the initial state as a possible move.
+    */
+  def lastMoveDistanceToWall: Int = lastPos match {
+    case None => 0
+    case Some(Pos(r,c)) => Seq(r, (rows - 1) - r, c, (cols - 1) - c).min
+  }
+
 
   // Output and debugging functions
 

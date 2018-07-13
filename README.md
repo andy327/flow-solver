@@ -1,2 +1,1 @@
-# flow-solver
-Solver for Flow Free game
+# Flow Free Solver

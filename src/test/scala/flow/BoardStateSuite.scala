@@ -160,14 +160,14 @@ class BoardStateSuite extends FunSuite {
     )
   }
 
-  test("pathsCompleted") {
-    new Board1 { assert(!pathsCompleted) }
-    new Board2 { assert(!pathsCompleted) }
-    new Board3 { assert(!pathsCompleted) }
-    new Board4 { assert(!pathsCompleted) }
-    new Board5 { assert(!pathsCompleted) }
-    new Board6 { assert(pathsCompleted) }
-    new Board7 { assert(!pathsCompleted) }
+  test("allPathsCompleted") {
+    new Board1 { assert(!allPathsCompleted) }
+    new Board2 { assert(!allPathsCompleted) }
+    new Board3 { assert(!allPathsCompleted) }
+    new Board4 { assert(!allPathsCompleted) }
+    new Board5 { assert(!allPathsCompleted) }
+    new Board6 { assert(allPathsCompleted) }
+    new Board7 { assert(!allPathsCompleted) }
   }
 
   test("boardFilled") {
@@ -270,6 +270,16 @@ class BoardStateSuite extends FunSuite {
     new Board7 { assert(legalMoves.count(isMoveForced) == 6) }
   }
 
+  test("numberOfEmptyCells") {
+    new Board1 { assert(numberOfEmptyCells == 17) }
+    new Board2 { assert(numberOfEmptyCells == 8) }
+    new Board3 { assert(numberOfEmptyCells == 13) }
+    new Board4 { assert(numberOfEmptyCells == 16) }
+    new Board5 { assert(numberOfEmptyCells == 16) }
+    new Board6 { assert(numberOfEmptyCells == 0) }
+    new Board7 { assert(numberOfEmptyCells == 19) }
+  }
+
   test("doesLastMoveContinuePath") {
     new Board1 { assert(!doesLastMoveContinuePath) }
     new Board2 { assert(!doesLastMoveContinuePath) }
@@ -308,6 +318,16 @@ class BoardStateSuite extends FunSuite {
     new Board5 { assert(lastMoveDistanceToWall == 1) }
     new Board6 { assert(lastMoveDistanceToWall == 0) }
     new Board7 { assert(lastMoveDistanceToWall == 1) }
+  }
+
+  test("lastMovePossibleOptions") {
+    new Board1 { assert(lastMovePossibleOptions == 1) }
+    new Board2 { assert(lastMovePossibleOptions == 1) }
+    new Board3 { assert(lastMovePossibleOptions == 2) }
+    new Board4 { assert(lastMovePossibleOptions == 2) }
+    new Board5 { assert(lastMovePossibleOptions == 3) }
+    new Board6 { assert(lastMovePossibleOptions == 1) }
+    new Board7 { assert(lastMovePossibleOptions == 2) }
   }
 
 }

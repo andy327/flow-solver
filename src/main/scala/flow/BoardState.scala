@@ -76,6 +76,14 @@ trait BoardState extends BoardDef { self =>
   }
 
   /**
+    * The Path that ends with the latest Move.
+    */
+  lazy val lastExtendedPath: Path = lastMove.map{ move =>
+    val (pathA, pathB) = colorPaths(move.color)
+    if (pathA.endsWith(move.pos)) pathA else pathB
+  }.getOrElse(Path.empty)
+
+  /**
     * Returns true if the Position is an active point.
     */
   def isActivePoint(pos: Pos): Boolean = activePoints.contains(pos)
@@ -83,18 +91,23 @@ trait BoardState extends BoardDef { self =>
   /**
     * Returns true if each color has a Path connecting its two initial endpoint positions.
     */
-  def pathsCompleted: Boolean = colorStates.values forall (!_.isDefined)
+  lazy val allPathsCompleted: Boolean = colorStates.values forall (!_.isDefined)
+
+  /**
+    * Returns the number of flows which have complete and valid Paths.
+    */
+  lazy val numPathsCompleted: Int = colorStates.values.count(!_.isDefined)
 
   /**
     * Returns true if each cell in the board is participating in a Path.
     */
-  def boardFilled: Boolean = cells.values forall (_.isDefined)
+  lazy val boardFilled: Boolean = cells.values forall (_.isDefined)
 
   /**
     * Returns true if the board has been fully solved:
     * each cell is participating in a fully solved Path between two color termini.
     */
-  def solved: Boolean = boardFilled && pathsCompleted
+  lazy val solved: Boolean = boardFilled && allPathsCompleted
 
   /**
     * Determines the connected components of the unfilled cells. Each component is represented by an Int and
@@ -136,7 +149,7 @@ trait BoardState extends BoardDef { self =>
     * (or more) completed path segments or walls. Since there is no way to fill in this cell with a color and
     * still terminate a Path, this State is immediately marked as invalid.
     */
-  def doNoDeadEndsExist: Boolean = emptyCells forall { (pos: Pos) =>
+  lazy val doNoDeadEndsExist: Boolean = emptyCells forall { (pos: Pos) =>
     neighbors(pos).count{ pos2: Pos => isEmpty(pos2) || activePoints.contains(pos2) } > 1
   }
 
@@ -144,7 +157,7 @@ trait BoardState extends BoardDef { self =>
     * Returns true if any of the endpoints of a color's Path are unable to extend into any of the neighboring
     * spaces, i.e. no neighbors are either empty or are an endpoint of the same color.
     */
-  def areNoPathsStranded: Boolean = activeStates.keys
+  lazy val areNoPathsStranded: Boolean = activeStates.keys
     .filterNot{ case (pos1: Pos, pos2: Pos) => areNeighbors(pos1, pos2) } // neighboring endpoints can complete each other
     .flatMap { case (pos1, pos2) => Seq(pos1, pos2) }
     .forall { (pos: Pos) =>
@@ -156,7 +169,7 @@ trait BoardState extends BoardDef { self =>
     * connected component. If two endpoints have no neighbors that belong to the same connected component, they
     * will not be able to connect by any path and the state is invalid.
     */
-  def areComponentsLegal: Boolean = colorStates forall { case (_, state) =>
+  lazy val areComponentsLegal: Boolean = colorStates forall { case (_, state) =>
     state match {
       case None => true // the color has been path connected
       case Some((endPosA, endPosB)) => (componentsForPos(endPosA) intersect componentsForPos(endPosB)).nonEmpty
@@ -167,7 +180,7 @@ trait BoardState extends BoardDef { self =>
     * Returns the number of Paths that are impossible to connect. This method is used to ensure that the width of a
     * chokepoint is larger than the number of Paths that need to cross it.
     */
-  def numberOfBrokenPaths: Int = {
+  lazy val numberOfBrokenPaths: Int = {
     colorStates count { case (_, state) =>
       state match {
         case None => false
@@ -183,14 +196,12 @@ trait BoardState extends BoardDef { self =>
     * to see if the number of endpoints that are not bordering a shared connected component of empty regions is greater
     * than the number of cells we extended past the last move.
     */
-  def areThereNoChokepoints: Boolean = lastMove match {
+  lazy val areThereNoChokepoints: Boolean = lastMove match {
     case None => true
     case Some(move) if (isBorderCell(move.pos)) => true
     case Some(move) => { // create the state where we extend the path till it reaches a non-empty cell
       val extendedMoves: Seq[Move] = {
-        val (pathA, pathB) = colorPaths(move.color)
-        val currentPath = if (pathA.endsWith(move.pos)) pathA else pathB
-        val prevPos = currentPath.nodes(1) // an extended Path will always be at least two Moves long
+        val prevPos = lastExtendedPath.nodes(1) // an extended Path will always be at least two Moves long
         val newDirection = move.pos.directionFromPos(prevPos)
 
         lazy val extension: Stream[Pos] = Stream.cons(move.pos, extension.map(_.move(newDirection)))
@@ -209,7 +220,7 @@ trait BoardState extends BoardDef { self =>
   /**
     * Returns true if this State cannot be immediately discounted as a dead State with no valid moves.
     */
-  def isValid: Boolean = doNoDeadEndsExist && areNoPathsStranded && areComponentsLegal && areThereNoChokepoints
+  lazy val isValid: Boolean = doNoDeadEndsExist && areNoPathsStranded && areComponentsLegal && areThereNoChokepoints
 
   /**
     * Returns a Set of Moves that can be reached by extending one of the color Paths by one legal move.
@@ -278,9 +289,14 @@ trait BoardState extends BoardDef { self =>
   def lastPos: Option[Pos] = lastMove.map(_.pos)
 
   /**
+    * Returns the number of cells remaining to fill.
+    */
+  lazy val numberOfEmptyCells: Int = emptyCells.size
+
+  /**
     * Returns true if the last move extended the Path ending with the previous move.
     */
-  def doesLastMoveContinuePath: Boolean = moveStack match {
+  lazy val doesLastMoveContinuePath: Boolean = moveStack match {
     case last :: previous :: rest => areNeighbors(last.pos, previous.pos)
     case _ => false
   }
@@ -288,19 +304,16 @@ trait BoardState extends BoardDef { self =>
   /**
     * Returns true if the last move borders an earlier move (besides the previous cell) on the same Path (wasteful solution).
     */
-  def doesLastMoveFoldPath: Boolean = lastMove match {
-    case Some(move) => {
-      val (pathA, pathB) = colorPaths(move.color)
-      val prevPath = if (pathA.endsWith(move.pos)) pathA else pathB
-      prevPath.nodes.count{ pos => areNeighbors(move.pos, pos) } > 1 // should only border the previous cell in the Path
-    }
+  lazy val doesLastMoveFoldPath: Boolean = lastMove match {
+    case Some(move) => // should only border the previous cell in the Path
+      lastExtendedPath.nodes.count{ pos => areNeighbors(move.pos, pos) } > 1
     case None => false
   }
 
   /**
     * Returns true if the last move completes a border cell.
     */
-  def doesLastMoveBorderWall: Boolean = lastPos match {
+  lazy val doesLastMoveBorderWall: Boolean = lastPos match {
     case Some(pos) => isBorderCell(pos)
     case None => false
   }
@@ -309,9 +322,18 @@ trait BoardState extends BoardDef { self =>
     * Returns the minimum distance to one of the four walls. We can ignore the case where there are no moves because we
     * will never need to consider the initial state as a possible move.
     */
-  def lastMoveDistanceToWall: Int = lastPos match {
+  lazy val lastMoveDistanceToWall: Int = lastPos match {
     case None => 0
     case Some(Pos(r,c)) => Seq(r, (rows - 1) - r, c, (cols - 1) - c).min
+  }
+
+  /**
+    * Given the Path from the previous State before applying the latest Move, return the number of options we had to extend
+    * that Path.
+    */
+  lazy val lastMovePossibleOptions: Int = lastMove match {
+    case None => 1
+    case Some(move) => (neighbors(lastExtendedPath.nodes(1)) count isEmpty) + 1
   }
 
 
@@ -338,7 +360,7 @@ trait BoardState extends BoardDef { self =>
   def debug: String = {
     s"""${toString}
       |board filled: ${boardFilled}
-      |paths completed: ${colorStates.values.count(!_.isDefined)}/${colorStates.size}
+      |paths completed: ${numPathsCompleted}/${colorStates.size}
       |solved: ${solved}
       |dead ends: ${!doNoDeadEndsExist}
       |stranded paths: ${!areNoPathsStranded}

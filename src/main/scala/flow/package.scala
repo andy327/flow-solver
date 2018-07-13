@@ -40,7 +40,8 @@ package object flow {
   }
 
   object Path {
-    def from(positions: Pos*) = Path(positions)
+    def from(positions: Pos*): Path = Path(positions)
+    def empty: Path = Path(Seq.empty)
   }
 
 }

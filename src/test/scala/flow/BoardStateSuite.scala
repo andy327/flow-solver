@@ -133,6 +133,33 @@ class BoardStateSuite extends FunSuite {
     )
   }
 
+  // 3 - - - (chokepoint)
+  // 2 - - -
+  // 1 - - -
+  // 0 0 - -
+  // - 1 - -
+  // - 2 - -
+  // 0 3 - -
+  trait Board7 extends BoardState {
+    val rows = 7
+    val cols = 4
+    val colorEndPts = Map(
+      '0' -> (Pos(3,0), Pos(6,0)),
+      '1' -> (Pos(2,0), Pos(4,1)),
+      '2' -> (Pos(1,0), Pos(5,1)),
+      '3' -> (Pos(0,0), Pos(6,1))
+    )
+    override val colorPaths = Map(
+      '0' -> (Path.from(Pos(3,1), Pos(3,0)), Path.from(Pos(6,0))),
+      '1' -> (Path.from(Pos(2,0)), Path.from(Pos(4,1))),
+      '2' -> (Path.from(Pos(1,0)), Path.from(Pos(5,1))),
+      '3' -> (Path.from(Pos(0,0)), Path.from(Pos(6,1)))
+    )
+    override val moveStack = Seq(
+      Move('0', Pos(3,1))
+    )
+  }
+
   test("pathsCompleted") {
     new Board1 { assert(!pathsCompleted) }
     new Board2 { assert(!pathsCompleted) }
@@ -140,6 +167,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!pathsCompleted) }
     new Board5 { assert(!pathsCompleted) }
     new Board6 { assert(pathsCompleted) }
+    new Board7 { assert(!pathsCompleted) }
   }
 
   test("boardFilled") {
@@ -149,6 +177,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!boardFilled) }
     new Board5 { assert(!boardFilled) }
     new Board6 { assert(boardFilled) }
+    new Board7 { assert(!boardFilled) }
   }
 
   test("solved") {
@@ -158,6 +187,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!solved) }
     new Board5 { assert(!solved) }
     new Board6 { assert(solved) }
+    new Board7 { assert(!solved) }
   }
 
   test("doNoDeadEndsExist") {
@@ -167,6 +197,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(doNoDeadEndsExist) }
     new Board5 { assert(doNoDeadEndsExist) }
     new Board6 { assert(doNoDeadEndsExist) }
+    new Board7 { assert(doNoDeadEndsExist) }
   }
 
   test("areNoPathsStranded") {
@@ -176,6 +207,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!areNoPathsStranded) }
     new Board5 { assert(areNoPathsStranded) }
     new Board6 { assert(areNoPathsStranded) }
+    new Board7 { assert(areNoPathsStranded) }
   }
 
   test("areComponentsLegal") {
@@ -185,6 +217,27 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!areComponentsLegal) }
     new Board5 { assert(!areComponentsLegal) }
     new Board6 { assert(areComponentsLegal) }
+    new Board7 { assert(!areComponentsLegal) }
+  }
+
+  test("numberOfBrokenPaths") {
+    new Board1 { assert(numberOfBrokenPaths == 0) }
+    new Board2 { assert(numberOfBrokenPaths == 0) }
+    new Board3 { assert(numberOfBrokenPaths == 1) }
+    new Board4 { assert(numberOfBrokenPaths == 1) }
+    new Board5 { assert(numberOfBrokenPaths == 1) }
+    new Board6 { assert(numberOfBrokenPaths == 0) }
+    new Board7 { assert(numberOfBrokenPaths == 1) }
+  }
+
+  test("areThereNoChokepoints") {
+    new Board1 { assert(areThereNoChokepoints) }
+    new Board2 { assert(areThereNoChokepoints) }
+    new Board3 { assert(areThereNoChokepoints) }
+    new Board4 { assert(areThereNoChokepoints) }
+    new Board5 { assert(!areThereNoChokepoints) }
+    new Board6 { assert(areThereNoChokepoints) }
+    new Board7 { assert(!areThereNoChokepoints) }
   }
 
   test("isValid") {
@@ -194,6 +247,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!isValid) }
     new Board5 { assert(!isValid) }
     new Board6 { assert(isValid) }
+    new Board7 { assert(!isValid) }
   }
 
   test("legalMoves") {
@@ -203,6 +257,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(legalMoves.size === 12) }
     new Board5 { assert(legalMoves.size === 14) }
     new Board6 { assert(legalMoves.size === 0) }
+    new Board7 { assert(legalMoves.size === 11) }
   }
 
   test("isMoveForced") {
@@ -212,6 +267,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(legalMoves.count(isMoveForced) == 3) }
     new Board5 { assert(legalMoves.count(isMoveForced) == 3) }
     new Board6 { assert(legalMoves.count(isMoveForced) == 0) }
+    new Board7 { assert(legalMoves.count(isMoveForced) == 6) }
   }
 
   test("doesLastMoveContinuePath") {
@@ -221,6 +277,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!doesLastMoveContinuePath) }
     new Board5 { assert(!doesLastMoveContinuePath) }
     new Board6 { assert(doesLastMoveContinuePath) }
+    new Board7 { assert(!doesLastMoveContinuePath) }
   }
 
   test("doesLastMoveFoldPath") {
@@ -230,6 +287,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(!doesLastMoveFoldPath) }
     new Board5 { assert(!doesLastMoveFoldPath) }
     new Board6 { assert(!doesLastMoveFoldPath) }
+    new Board7 { assert(!doesLastMoveFoldPath) }
   }
 
   test("doesLastMoveBorderWall") {
@@ -239,6 +297,7 @@ class BoardStateSuite extends FunSuite {
     new Board4 { assert(doesLastMoveBorderWall) }
     new Board5 { assert(!doesLastMoveBorderWall) }
     new Board6 { assert(doesLastMoveBorderWall) }
+    new Board7 { assert(!doesLastMoveBorderWall) }
   }
 
 }

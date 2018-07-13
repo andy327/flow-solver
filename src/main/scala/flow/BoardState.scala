@@ -164,9 +164,52 @@ trait BoardState extends BoardDef { self =>
   }
 
   /**
+    * Returns the number of Paths that are impossible to connect. This method is used to ensure that the width of a
+    * chokepoint is larger than the number of Paths that need to cross it.
+    */
+  def numberOfBrokenPaths: Int = {
+    colorStates count { case (_, state) =>
+      state match {
+        case None => false
+        case Some((endPosA, endPosB)) => (componentsForPos(endPosA) intersect componentsForPos(endPosB)).isEmpty
+      }
+    }
+  }
+
+  /**
+    * Returns true if the last Move caused a chokepoint, i.e. a narrow passage of width W where at least W + 1 paths
+    * must cross in order to reach their respective endpoints. This is accomplished by extending the path forward
+    * until it reaches a non-empty cell. The resulting extension divides the region into two sub-regions, and we check
+    * to see if the number of endpoints that are not bordering a shared connected component of empty regions is greater
+    * than the number of cells we extended past the last move.
+    */
+  def areThereNoChokepoints: Boolean = lastMove match {
+    case None => true
+    case Some(move) if (isBorderCell(move.pos)) => true
+    case Some(move) => { // create the state where we extend the path till it reaches a non-empty cell
+      val extendedMoves: Seq[Move] = {
+        val (pathA, pathB) = colorPaths(move.color)
+        val currentPath = if (pathA.endsWith(move.pos)) pathA else pathB
+        val prevPos = currentPath.nodes(1) // an extended Path will always be at least two Moves long
+        val newDirection = move.pos.directionFromPos(prevPos)
+
+        lazy val extension: Stream[Pos] = Stream.cons(move.pos, extension.map(_.move(newDirection)))
+        val extendedPositions: Seq[Pos] = extension.tail.takeWhile(pos => validPos(pos) && isEmpty(pos)).toList
+
+        extendedPositions.map(pos => Move(move.color, pos))
+      }
+
+      val chokepointWidth = extendedMoves.length
+      val extendedState = extendedMoves.foldLeft(self){ case (state, move) => state.copyWithNewMove(move) }
+
+      extendedState.numberOfBrokenPaths <= chokepointWidth
+    }
+  }
+
+  /**
     * Returns true if this State cannot be immediately discounted as a dead State with no valid moves.
     */
-  def isValid: Boolean = doNoDeadEndsExist && areNoPathsStranded && areComponentsLegal
+  def isValid: Boolean = doNoDeadEndsExist && areNoPathsStranded && areComponentsLegal && areThereNoChokepoints
 
   /**
     * Returns a Set of Moves that can be reached by extending one of the color Paths by one legal move.

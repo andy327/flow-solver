@@ -20,6 +20,13 @@ package object flow {
       case Up => Pos(row - 1, col)
       case Down => Pos(row + 1, col)
     }
+    // should only be used when otherPos is guaranteed to be a neighbor
+    def directionFromPos(otherPos: Pos): Direction =
+      if (otherPos.move(Up) == this) Up
+      else if (otherPos.move(Down) == this) Down
+      else if (otherPos.move(Left) == this) Left
+      else if (otherPos.move(Right) == this) Right
+      else sys.error(s"positions are not neighbors: ${this}, ${otherPos}")
   }
 
   case class Move(color: Color, pos: Pos)

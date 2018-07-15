@@ -68,7 +68,7 @@ trait Solver extends BoardDef { self =>
   /**
     * Returns the fully solved BoardState where each color's endpoints are connected via a valid Path.
     */
-  def solution(maxIterations: Int = 30000, maxAttempts: Int = 10): Option[BoardState] = {
+  def solution(maxIterations: Int = 5000, maxAttempts: Int = 10): Option[BoardState] = {
     var numAttempts: Int = 0
     var solvedState: Option[BoardState] = None
 
@@ -89,6 +89,33 @@ trait Solver extends BoardDef { self =>
     }
 
     solvedState.filter(_.solved)
+  }
+
+}
+
+object FlowSolver extends App {
+
+  if (args.length == 1)
+    solveBoardFromFile(args(0))
+  else
+    println("Please enter path to board file.")
+
+  /**
+    * Prints the string representation of the solution state for the board stored in the given path.
+    */
+  def solveBoardFromFile(path: String): Unit = {
+    val boardString = scala.io.Source.fromFile(path).getLines.mkString("\n")
+
+    object Board extends StringParserBoard with Solver {
+      val board = boardString
+    }
+
+    val solution: Option[BoardState] = Board.solution()
+
+    solution match {
+      case Some(state) => println(state)
+      case None => println(s"could not find solution to board in ${path}")
+    }
   }
 
 }

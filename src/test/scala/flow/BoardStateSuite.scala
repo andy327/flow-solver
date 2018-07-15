@@ -236,7 +236,7 @@ class BoardStateSuite extends FunSuite {
     new Board2 { assert(areThereNoChokepoints) }
     new Board3 { assert(areThereNoChokepoints) }
     new Board4 { assert(areThereNoChokepoints) }
-    new Board5 { assert(!areThereNoChokepoints) }
+    new Board5 { assert(areThereNoChokepoints) }
     new Board6 { assert(areThereNoChokepoints) }
     new Board7 { assert(!areThereNoChokepoints) }
   }

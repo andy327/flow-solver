@@ -131,7 +131,7 @@ trait BoardState extends BoardDef { self =>
     do {
       updated = false
       emptyCells.foreach{ pos1 =>
-        neighbors(pos1).filter(emptyCells.contains(_)).foreach{ pos2 =>
+        neighbors(pos1).filter(emptyCells.contains(_)) foreach { pos2 =>
           val id1 = compIds(pos1)
           val id2 = compIds(pos2)
           if (id1 < id2) {
@@ -156,17 +156,23 @@ trait BoardState extends BoardDef { self =>
   def componentsForPos(pos: Pos): Set[Component] = (neighbors(pos) map (components(_))).flatten
 
   /**
-    * Returns true if there are no dead-end spaces in this State, i.e. an empty space that is surrounded by three
-    * (or more) completed path segments or walls. Since there is no way to fill in this cell with a color and still
-    * terminate a Path, this State is immediately marked as invalid. It suffices to check only the empty cells
-    * bordering the last Move.
+    * Returns true if there are no dead-end spaces in this State. There are two types of dead spaces: (1) empty cells that
+    * are surrounded by three (or more) completed path segments or walls, and (2) empty cells that are surrounded by no
+    * empty spaces, and no two active points of the same color. Since there is no way to fill in this cell with a color and
+    * still terminate a Path, this State is immediately marked as invalid. It suffices to check only the empty cells bordering
+    * the last Move for dead-ends.
     */
-  lazy val doNoDeadEndsExist: Boolean = {
-    lastPos match {
-      case None => true
-      case Some(pos) => neighbors(pos).filter(isEmpty) forall { (posToCheck: Pos) =>
-        neighbors(posToCheck).count{ pos2: Pos => isEmpty(pos2) || activePoints.contains(pos2) } > 1
+  lazy val doNoDeadEndsExist: Boolean = lastMove match {
+    case None => true
+    case Some(move) => neighbors(move.pos).filter(isEmpty) forall { (posToCheck: Pos) =>
+      val validNeighbors = neighbors(posToCheck)
+      val notDeadEndType1 = validNeighbors.count{ pos: Pos => isEmpty(pos) || isActivePoint(pos) } > 1
+      val notDeadEndType2 = (validNeighbors.exists(isEmpty)) || {
+        validNeighbors.filter(isActivePoint)
+          .groupBy(pos => activePoints(pos))
+          .exists{ case (color, pts) => pts.size == 2 }
       }
+      notDeadEndType1 && notDeadEndType2
     }
   }
 
@@ -231,6 +237,7 @@ trait BoardState extends BoardDef { self =>
       val extendedState = extendedMoves.foldLeft(self){ case (state, move) => state.copyWithNewMove(move) }
 
       // subtract 1 because the extended Path may have passed a chance to complete itself along the way
+      // TODO: This is a hack, we should just remove the color from consideration. see Board5 in BoardStateSuite
       extendedState.numBrokenPaths - 1 <= chokepointWidth
     }
   }
@@ -359,7 +366,7 @@ trait BoardState extends BoardDef { self =>
     */
   lazy val lastMovePossibleOptions: Int = lastMove match {
     case None => 1
-    case Some(move) => (neighbors(lastExtendedPath.nodes(1)) count isEmpty) + 1
+    case _ => (neighbors(lastExtendedPath.nodes(1)) count isEmpty) + 1
   }
 
 

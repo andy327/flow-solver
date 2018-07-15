@@ -34,6 +34,7 @@ package object flow {
   case class Path(nodes: Seq[Pos]) { // head Position is most recent
     def size: Int = nodes.size
     def latest: Pos = nodes.head
+    def inactive: Seq[Pos] = nodes.tail
     def endsWith(pos: Pos): Boolean = pos == latest
     def contains(pos: Pos): Boolean = nodes.contains(pos)
     def extend(pos: Pos): Path = Path(pos +: nodes)

@@ -18,12 +18,11 @@ trait Solver extends BoardDef { self =>
     * Function that assigns a score to a BoardState, where a higher value is more likely to approach a solution.
     */
   def heuristic: BoardState => Double = state => 0.0 +
-    (-1.0) * state.numberOfEmptyCells +
+    (-1.0) * state.numEmptyCells +
     (1.0) * state.numPathsCompleted +
-    (0.9) * state.doesLastMoveContinuePath.compare(false) +
-    (-100.0) * state.doesLastMoveFoldPath.compare(false) +
-    (0.5) * state.doesLastMoveBorderWall.compare(false) +
-    (0.0) * state.lastMoveDistanceToWall
+    (0.5) * state.doesLastMoveContinuePath.compare(false) +
+    (0.1) * state.doesLastMoveBorderWall.compare(false) +
+    (-0.01) * state.lastMoveDistanceToWall
 
   /**
     * BoardStates with a higher score of their heuristic function will be explored first.
@@ -51,13 +50,19 @@ trait Solver extends BoardDef { self =>
     * a state where all the forced moves have been exhausted.
     */
   def nextStates(state: BoardState): Seq[BoardState] = {
-    state.legalMoves.find(state.isMoveForced) match {
-      case Some(move) => Seq(state.copyWithNewMove(move))
-      case None => state.legalMoves
-        .map(state.copyWithNewMove).toSeq
-        .filter(_.isValid)
-        .sortBy(_.lastMovePossibleOptions)
+    val newStates: Seq[BoardState] = state.legalMoves.map(state.copyWithNewMove).toSeq
+
+    if (newStates.exists(nextState => nextState.isForced && !nextState.isValid)) {
+      val badState = newStates.find(nextState => nextState.isForced && !nextState.isValid)
+      Seq.empty // a forced invalid state means the solution cannot come from this state
     }
+    else
+      newStates.find(nextState => nextState.isForced && nextState.isValid) match {
+        case Some(state) => Seq(state)
+        case None => newStates
+          .filter(_.isValid)
+          .sortBy(_.lastMovePossibleOptions)
+      }
   }
 
   /**
@@ -67,7 +72,7 @@ trait Solver extends BoardDef { self =>
     init()
     var next: ScoredState = dequeue()
     numIterations = 0
-    while (!next.state.solved && numIterations < 2000) {
+    while (!next.state.solved && numIterations < 10000) {
       nextStates(next.state).map(enqueue)
       next = dequeue()
       // println()

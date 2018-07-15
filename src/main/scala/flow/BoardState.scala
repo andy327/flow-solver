@@ -203,10 +203,11 @@ trait BoardState extends BoardDef { self =>
     * Returns the number of Paths that are impossible to connect. This method is used to ensure that the width of a
     * chokepoint is larger than the number of Paths that need to cross it.
     */
-  lazy val numBrokenPaths: Int = {
-    colorStates count { case (_, state) =>
+  def numBrokenPaths(ignoredColor: Color): Int = {
+    colorStates count { case (color, state) =>
       state match {
         case None => false
+        case _ if (color == ignoredColor) => false
         case Some((endPosA, endPosB)) => (componentsForPos(endPosA) intersect componentsForPos(endPosB)).isEmpty
       }
     }
@@ -236,9 +237,8 @@ trait BoardState extends BoardDef { self =>
       val chokepointWidth = extendedMoves.length
       val extendedState = extendedMoves.foldLeft(self){ case (state, move) => state.copyWithNewMove(move) }
 
-      // subtract 1 because the extended Path may have passed a chance to complete itself along the way
-      // TODO: This is a hack, we should just remove the color from consideration. see Board5 in BoardStateSuite
-      extendedState.numBrokenPaths - 1 <= chokepointWidth
+      // we ignore the color of the extended path in our chokepoint calculation
+      extendedState.numBrokenPaths(ignoredColor = move.color) <= chokepointWidth
     }
   }
 

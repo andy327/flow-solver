@@ -34,7 +34,7 @@ class SolverSuite extends FunSuite {
         |5------""".stripMargin
   }
 
-  object Board4 extends StringParserBoard with Solver {
+  object Board4 extends StringParserBoard with Solver { // very difficult board
     val board =
       """01-----2
         |------3-
@@ -46,15 +46,20 @@ class SolverSuite extends FunSuite {
         |--------""".stripMargin
   }
 
-  test("nextStates") {
-    assert(Board1.solution.solved)
-    println(s"iterations for board 1: ${Board1.numIterations}")
-    assert(Board2.solution.solved)
-    println(s"iterations for board 2: ${Board2.numIterations}")
-    assert(Board3.solution.solved)
-    println(s"iterations for board 3: ${Board3.numIterations}")
-    // assert(Board4.solution.solved)
-    // println(s"iterations for board 4: ${Board4.numIterations}")
+  test("solving a 5x5 board") {
+    assert(Board1.solution(maxIterations = 1000).isDefined)
+  }
+
+  test("solving a 6x6 board") {
+    assert(Board2.solution(maxIterations = 1000).isDefined)
+  }
+
+  test("solving a 7x7 board") {
+    assert(Board3.solution(maxIterations = 1000).isDefined)
+  }
+
+  test("solving a 8x8 board") {
+    assert(Board4.solution(maxIterations = 1000).isDefined)
   }
 
 }

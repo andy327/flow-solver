@@ -221,22 +221,12 @@ class BoardStateSuite extends FunSuite {
     new Board7 { assert(!areComponentsLegal) }
   }
 
-  test("numBrokenPaths") {
-    new Board1 { assert(numBrokenPaths == 0) }
-    new Board2 { assert(numBrokenPaths == 0) }
-    new Board3 { assert(numBrokenPaths == 1) }
-    new Board4 { assert(numBrokenPaths == 1) }
-    new Board5 { assert(numBrokenPaths == 1) }
-    new Board6 { assert(numBrokenPaths == 0) }
-    new Board7 { assert(numBrokenPaths == 1) }
-  }
-
   test("areThereNoChokepoints") {
     new Board1 { assert(areThereNoChokepoints) }
     new Board2 { assert(areThereNoChokepoints) }
     new Board3 { assert(areThereNoChokepoints) }
     new Board4 { assert(areThereNoChokepoints) }
-    new Board5 { assert(areThereNoChokepoints) }
+    new Board5 { assert(!areThereNoChokepoints) }
     new Board6 { assert(areThereNoChokepoints) }
     new Board7 { assert(!areThereNoChokepoints) }
   }

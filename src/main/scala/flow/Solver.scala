@@ -68,19 +68,27 @@ trait Solver extends BoardDef { self =>
   /**
     * Returns the fully solved BoardState where each color's endpoints are connected via a valid Path.
     */
-  def solution: BoardState = {
-    init()
-    var next: ScoredState = dequeue()
-    numIterations = 0
-    while (!next.state.solved && numIterations < 10000) {
-      nextStates(next.state).map(enqueue)
-      next = dequeue()
-      // println()
-      // println(s"SCORE: ${next.score}")
-      // println(next.state.debug)
-      numIterations += 1
+  def solution(maxIterations: Int = 30000, maxAttempts: Int = 10): Option[BoardState] = {
+    var numAttempts: Int = 0
+    var solvedState: Option[BoardState] = None
+
+    while(!solvedState.isDefined && numAttempts < maxAttempts) {
+      init()
+      var next: ScoredState = dequeue()
+      numIterations = 0
+
+      while (!solvedState.isDefined && numIterations < maxIterations) {
+        nextStates(next.state).map(enqueue)
+        next = dequeue()
+
+        numIterations += 1
+        if (next.state.solved) solvedState = Some(next.state)
+      }
+
+      numAttempts += 1
     }
-    next.state
+
+    solvedState.filter(_.solved)
   }
 
 }

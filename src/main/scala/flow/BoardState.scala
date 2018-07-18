@@ -200,6 +200,23 @@ trait BoardState extends BoardDef { self =>
   }
 
   /**
+    * Returns true if each region of empty cells has at least one pair of active points bordering them. If this is not the
+    * case, the empty cells cannot be filled in while still connecting each pair of endpoints, and the state is invalid.
+    */
+  lazy val areNoRegionsStranded: Boolean = {
+    val regions: Seq[Set[Pos]] = components
+      .groupBy(_._2)
+      .filterKeys(_.isDefined)
+      .map{ case (_, componentIds) => componentIds.keys.toSet }.toList
+
+    val regionColors: Seq[Seq[Color]] = regions.map{
+      set => set.flatMap(neighbors).filter(isActivePoint).toSeq.map(activePoints)
+    }
+
+    regionColors.forall(colors => colors.distinct.size != colors.size)
+  }
+
+  /**
     * Returns the number of Paths that are impossible to connect. This method is used to ensure that the width of a
     * chokepoint is larger than the number of Paths that need to cross it.
     */
@@ -246,7 +263,7 @@ trait BoardState extends BoardDef { self =>
     * Returns true if this State cannot be immediately discounted as a dead State with no valid moves.
     */
   lazy val isValid: Boolean = doNoDeadEndsExist && areNoPathsStranded && areNoPathsFolded &&
-    areComponentsLegal && areThereNoChokepoints
+    areComponentsLegal && areNoRegionsStranded && areThereNoChokepoints
 
   /**
     * Returns a Set of Moves that can be reached by extending one of the color Paths by one legal move.

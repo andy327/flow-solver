@@ -4,7 +4,7 @@ import org.scalatest.FunSuite
 
 class SolverSuite extends FunSuite {
 
-  object Board1 extends StringParserBoard with Solver {
+  object Board5x5 extends StringParserBoard with Solver {
     val board =
       """0----
         |-----
@@ -13,7 +13,7 @@ class SolverSuite extends FunSuite {
         |3---2""".stripMargin
   }
 
-  object Board2 extends StringParserBoard with Solver {
+  object Board6x6 extends StringParserBoard with Solver {
     val board =
       """-----0
         |------
@@ -23,7 +23,7 @@ class SolverSuite extends FunSuite {
         |3---23""".stripMargin
   }
 
-  object Board3 extends StringParserBoard with Solver {
+  object Board7x7 extends StringParserBoard with Solver {
     val board =
       """-------
         |01---23
@@ -34,7 +34,7 @@ class SolverSuite extends FunSuite {
         |5------""".stripMargin
   }
 
-  object Board4 extends StringParserBoard with Solver { // very difficult board
+  object Board8x8 extends StringParserBoard with Solver { // very difficult board
     val board =
       """01-----2
         |------3-
@@ -46,20 +46,55 @@ class SolverSuite extends FunSuite {
         |--------""".stripMargin
   }
 
+  object Board9x9 extends StringParserBoard with Solver {
+    val board =
+      """0--------
+        |---------
+        |---1-----
+        |--2--3---
+        |-----4---
+        |0-34-5---
+        |6--7-----
+        |-5---6-2-
+        |-------17""".stripMargin
+  }
+
+  object Board10x10 extends StringParserBoard with Solver {
+    val board =
+      """----------
+        |----------
+        |-------0--
+        |-10-----1-
+        |-2---34-5-
+        |-----6----
+        |--746-----
+        |---------8
+        |-3-2-----5
+        |-8-------7""".stripMargin
+  }
+
   test("solving a 5x5 board") {
-    assert(Board1.solution(maxIterations = 1000).isDefined)
+    assert(Board5x5.solution(maxIterations = 1000).isDefined)
   }
 
   test("solving a 6x6 board") {
-    assert(Board2.solution(maxIterations = 1000).isDefined)
+    assert(Board6x6.solution(maxIterations = 1000).isDefined)
   }
 
   test("solving a 7x7 board") {
-    assert(Board3.solution(maxIterations = 1000).isDefined)
+    assert(Board7x7.solution(maxIterations = 1000).isDefined)
   }
 
   test("solving a 8x8 board") {
-    assert(Board4.solution(maxIterations = 1000).isDefined)
+    assert(Board8x8.solution(maxIterations = 1000).isDefined)
+  }
+
+  test("solving a 9x9 board") {
+    assert(Board9x9.solution(maxIterations = 1000).isDefined)
+  }
+
+  test("solving a 10x10 board") {
+    assert(Board10x10.solution(maxIterations = 1000).isDefined)
   }
 
 }

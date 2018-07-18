@@ -221,6 +221,16 @@ class BoardStateSuite extends FunSuite {
     new Board7 { assert(!areComponentsLegal) }
   }
 
+  test("areNoRegionsStranded") {
+    new Board1 { assert(areNoRegionsStranded) }
+    new Board2 { assert(areNoRegionsStranded) }
+    new Board3 { assert(!areNoRegionsStranded) }
+    new Board4 { assert(areNoRegionsStranded) }
+    new Board5 { assert(areNoRegionsStranded) }
+    new Board6 { assert(areNoRegionsStranded) }
+    new Board7 { assert(!areNoRegionsStranded) }
+  }
+
   test("areThereNoChokepoints") {
     new Board1 { assert(areThereNoChokepoints) }
     new Board2 { assert(areThereNoChokepoints) }
